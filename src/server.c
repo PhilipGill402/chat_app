@@ -3,7 +3,37 @@
 #define SERVER_IP "127.0.0.1"
 #define SERVER_PORT 8080
 #define MAX_CLIENTS 64
+#define MAX_MESSAGE_LENGTH 1024
+
 int running = 1;
+
+void* handle_client(void* arg){
+    int* client_fd_ptr = (int*)arg;
+    int client_fd = *client_fd_ptr;
+    free(arg);
+
+    while (1){
+        char* buffer = malloc(sizeof(char) * MAX_MESSAGE_LENGTH);
+        int bytes_read = recv(client_fd, buffer, MAX_MESSAGE_LENGTH - 1, 0);
+        if (bytes_read < 0){
+            perror("recv");
+            return NULL; 
+        } else if (bytes_read == 0){
+            printf("Client %d disconnected\n", client_fd);
+            close(client_fd);
+            return NULL; 
+        }
+        
+        buffer[bytes_read - 1] = '\0';
+        printf("Client %d: %s\n", client_fd, buffer);
+        free(buffer);
+        buffer = NULL;
+
+    }
+
+    close(client_fd);
+    return NULL;
+}
 
 int main(){
     struct sockaddr_in address;
@@ -39,15 +69,19 @@ int main(){
     }
     
     while (running){
-        int client_fd = accept(server_fd, (struct sockaddr*)&client_address, &client_address_len);
-        if (client_fd < 0){
+        pthread_t thread; 
+        int* client_fd = malloc(sizeof(int)); 
+        *client_fd = accept(server_fd, (struct sockaddr*)&client_address, &client_address_len);
+        if (*client_fd < 0){
             perror("accept");
             close(server_fd);
-            close(client_fd);
+            close(*client_fd);
             return -1;
         }
         
-        printf("Connected!\n");
+        printf("Client %d connected\n", *client_fd);
+        pthread_create(&thread, NULL, handle_client, client_fd);
+        pthread_detach(thread);
     }
 
     close(server_fd);
