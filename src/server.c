@@ -60,6 +60,7 @@ void* handle_client(void* arg){
         strcpy(msg, username);
         strcat(msg, ": ");
         strcat(msg, buffer);
+        msg[strlen(msg)] = '\0'; 
         printf("%s", msg);
 
         //sends to everyone

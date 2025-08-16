@@ -10,4 +10,5 @@
 #include <signal.h>
 #include <errno.h>
 #include <poll.h>
-#include <ncurses.h>
+#include <readline/readline.h>
+#include <readline/history.h>
