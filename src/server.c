@@ -11,6 +11,10 @@ int running = 1;
 int active_users[MAX_CLIENTS];
 int num_clients = 0;
 
+void signal_handler(int sig){ 
+    running = 0;
+}
+
 void* handle_client(void* arg){
     int* client_fd_ptr = (int*)arg;
     int client_fd = *client_fd_ptr;
@@ -61,7 +65,7 @@ void* handle_client(void* arg){
         strcat(msg, ": ");
         strcat(msg, buffer);
         msg[strlen(msg)] = '\0'; 
-        printf("%s", msg);
+        printf("%s\n", msg);
 
         //sends to everyone
         for (int i = 0; i < num_clients; i++){
@@ -94,6 +98,8 @@ int main(){
     struct sockaddr_in client_address;
     socklen_t client_address_len = sizeof(client_address);
     int ret;
+    
+    signal(SIGINT, signal_handler);
 
     server_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (server_fd < 0){
@@ -125,6 +131,18 @@ int main(){
     }
     
     while (running){
+        struct pollfd pfd = {.fd = server_fd, .events = POLLIN};
+        ret = poll(&pfd, 1, 1000);
+        if (ret < 0){
+            if (errno == EINTR){
+                break;
+            }
+            perror("poll");
+            break;
+        } else if (ret == 0){
+            continue;
+        }
+
         pthread_t thread; 
         int* client_fd = malloc(sizeof(int)); 
         *client_fd = accept(server_fd, (struct sockaddr*)&client_address, &client_address_len);
@@ -138,7 +156,8 @@ int main(){
         pthread_create(&thread, NULL, handle_client, client_fd);
         pthread_detach(thread);
     }
-
+    
+    printf("\nClosing server\n");
     close(server_fd);
     return 0;
 }

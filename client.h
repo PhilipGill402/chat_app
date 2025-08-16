@@ -10,5 +10,7 @@
 #include <signal.h>
 #include <errno.h>
 #include <poll.h>
-#include <readline/readline.h>
-#include <readline/history.h>
+
+void signal_handler(int sig);
+void* receive_thread(void* arg);
+
