@@ -1,6 +1,6 @@
 # Compiler and flags
 CC = gcc
-CFLAGS = -Wall -Wextra -g -Iinclude
+CFLAGS = -g -Iinclude
 
 # Sources and objects
 SRC = $(wildcard src/*.c)
