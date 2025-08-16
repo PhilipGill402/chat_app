@@ -35,10 +35,10 @@ Compile both server and client using `gcc`:
 
 ```bash
 # Build server
-gcc server.c -o server -lpthread
+make
 
 # Build client
-gcc client.c -o client -lpthread
+gcc client.c -o client
 ```
 
 ---
@@ -70,14 +70,14 @@ Enter your username: Alice
 Terminal B:
 ```
 Enter your username: Bob
-[Alice]: Hello!
+Alice: Hello!
 >> Hey Alice!
 ```
 
 Terminal A sees:
 ```
 >> Hello!
-[Bob]: Hey Alice!
+Bob: Hey Alice!
 ```
 
 ---
