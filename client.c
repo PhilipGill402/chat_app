@@ -3,6 +3,7 @@
 #define SERVER_IP "127.0.0.1"
 #define SERVER_PORT 8080
 #define MAX_MESSAGE_LENGTH 1024
+#define MAX_USERNAME_LENGTH 128
 
 int running = 1;
 
@@ -11,7 +12,12 @@ int main(){
     socklen_t address_length = sizeof(address);
     int ret;
     int bytes_sent;
+    int bytes_read;
+    int y;
+    int x;
     
+    initscr();
+
     int client_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (client_fd < 0){
         perror("socket"); 
@@ -24,18 +30,48 @@ int main(){
     address.sin_port = htons(SERVER_PORT);
 
     ret = connect(client_fd, (struct sockaddr*)&address, address_length);
+    
+    char username[MAX_USERNAME_LENGTH];
+    printw("Enter your username: ");
+    getstr(username);
+    bytes_sent = send(client_fd, username, strlen(username), 0);
+    if (bytes_sent < 0){
+        perror("send");
+        close(client_fd);
+        return -1;
+    }
 
     while (running){
-        char buffer[MAX_MESSAGE_LENGTH]; 
-        printf(">> ");
-        fgets(buffer, MAX_MESSAGE_LENGTH, stdin);
+        char* buffer = malloc(sizeof(char) * MAX_MESSAGE_LENGTH); 
+        printw(">> ");
+        getstr(buffer);
+        buffer[strlen(buffer)] = '\n'; 
+
         bytes_sent = send(client_fd, buffer, strlen(buffer), 0);
         if (bytes_sent < 0){
             perror("send");
             continue;
         }
-    } 
 
+        bytes_read = recv(client_fd, buffer, MAX_MESSAGE_LENGTH - 1, 0);
+        if (bytes_read < 0){
+            perror("recv");
+            continue;
+        }
+
+        getyx(stdscr, y, x);
+        move(y - 1, x);
+        clrtoeol();
+
+        printw("%s", buffer);
+        
+        refresh();
+
+        free(buffer);
+        buffer = NULL;
+    } 
+    
+    endwin();
     close(client_fd);    
     return 0;
 }
